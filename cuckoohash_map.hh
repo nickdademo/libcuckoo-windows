@@ -170,10 +170,10 @@ private:
     class RealPartialContainer {
         std::array<partial_t, SLOT_PER_BUCKET> partials_;
     public:
-        const partial_t& partial(int ind) const {
+        const partial_t& partial(size_t ind) const {
             return partials_[ind];
         }
-        partial_t& partial(int ind) {
+        partial_t& partial(size_t ind) {
             return partials_[ind];
         }
     };
@@ -182,11 +182,11 @@ private:
     public:
         // These methods should never be called, so we raise an exception if
         // they are.
-        const partial_t& partial(int) const {
+        const partial_t& partial(size_t) const {
             throw std::logic_error(
                 "FakePartialContainer::partial should never be called");
         }
-        partial_t& partial(int) {
+        partial_t& partial(size_t) {
             throw std::logic_error(
                 "FakePartialContainer::partial should never be called");
         }
@@ -214,25 +214,25 @@ private:
         static std::allocator<mapped_type> value_allocator;
 
     public:
-        bool occupied(int ind) const {
+        bool occupied(size_t ind) const {
             return occupied_.test(ind);
         }
 
-        const key_type& key(int ind) const {
+        const key_type& key(size_t ind) const {
             return *static_cast<const key_type*>(
                 static_cast<const void*>(&keys_[ind]));
         }
 
-        key_type& key(int ind) {
+        key_type& key(size_t ind) {
             return *static_cast<key_type*>(static_cast<void*>(&keys_[ind]));
         }
 
-        const mapped_type& val(int ind) const {
+        const mapped_type& val(size_t ind) const {
             return *static_cast<const mapped_type*>(
                 static_cast<const void*>(&vals_[ind]));
         }
 
-        mapped_type& val(int ind) {
+        mapped_type& val(size_t ind) {
             return *static_cast<mapped_type*>(static_cast<void*>(&vals_[ind]));
         }
 
@@ -296,6 +296,11 @@ private:
               num_inserts(kNumCores), num_deletes(kNumCores) {}
 
         ~TableInfo() {}
+
+        void* operator new(size_t i)
+        {
+            return _mm_malloc(i, sizeof(size_t) * CHAR_BIT);
+        }
     };
 
     // This is a hazard pointer, used to indicate which version of the TableInfo
@@ -873,7 +878,7 @@ private:
     // hashsize returns the number of buckets corresponding to a given
     // hashpower.
     static inline size_t hashsize(const size_t hashpower) {
-        return 1U << hashpower;
+        return 1ULL << hashpower;
     }
 
     // hashmask returns the bitmask for the buckets array corresponding to a
@@ -1300,7 +1305,7 @@ private:
     // the table (duplicate key error) and true otherwise.
     static bool try_find_insert_bucket(
         TableInfo* ti, const partial_t partial,
-        const key_type &key, const size_t i, int& j) {
+        const key_type &key, const size_t i, size_t& j) {
         j = -1;
         bool found_empty = false;
         for (size_t k = 0; k < SLOT_PER_BUCKET; ++k) {
@@ -1427,7 +1432,7 @@ private:
     cuckoo_status cuckoo_insert(const key_type &key, V val,
                                 const size_t hv, TableInfo* ti,
                                 const size_t i1, const size_t i2) {
-        int res1, res2;
+        size_t res1, res2;
         const partial_t partial = partial_key(hv);
         if (!try_find_insert_bucket(ti, partial, key, i1, res1)) {
             unlock_two(ti, i1, i2);
