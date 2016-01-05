@@ -946,7 +946,7 @@ private:
 
     // b_queue is the queue used to store b_slots for BFS cuckoo hashing.
 	__declspec(align(1)) class b_queue {
-        b_slot slots[MAX_CUCKOO_COUNT+1];
+        b_slot b_slots[MAX_CUCKOO_COUNT+1];
         size_t first;
         size_t last;
 
@@ -955,14 +955,14 @@ private:
 
 
         void enqueue(b_slot x) {
-            slots[last] = x;
+            b_slots[last] = x;
             last = (last == MAX_CUCKOO_COUNT) ? 0 : last+1;
             assert(last != first);
         }
 
         b_slot dequeue() {
             assert(first != last);
-            b_slot& x = slots[first];
+            b_slot& x = b_slots[first];
             first = (first == MAX_CUCKOO_COUNT) ? 0 : first+1;
             return x;
         }
