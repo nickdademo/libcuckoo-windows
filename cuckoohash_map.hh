@@ -296,11 +296,6 @@ private:
               num_inserts(kNumCores), num_deletes(kNumCores) {}
 
         ~TableInfo() {}
-
-        void* operator new(size_t i)
-        {
-            return _mm_malloc(i, sizeof(size_t) * CHAR_BIT);
-        }
     };
 
     // This is a hazard pointer, used to indicate which version of the TableInfo
@@ -1571,7 +1566,10 @@ private:
     // cuckoo_init initializes the hashtable, given an initial hashpower as the
     // argument.
     cuckoo_status cuckoo_init(const size_t hashpower) {
+        #pragma warning(push)
+        #pragma warning(disable: 4316)
         table_info.store(new TableInfo(hashpower));
+        #pragma warning(pop)
         cuckoo_clear(table_info.load());
         return ok;
     }
