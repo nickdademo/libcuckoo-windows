@@ -130,7 +130,7 @@ private:
     static const size_t MAX_BFS_DEPTH = 4;
 
     // Structs and functions used internally
-	__declspec(align(64)) class spinlock {
+    __declspec(align(64)) class spinlock {
         std::atomic_flag lock_;
     public:
         spinlock() {
@@ -200,10 +200,10 @@ private:
                                            RealPartialContainer>::type {
     private:
         std::array<typename std::aligned_storage<
-			sizeof(key_type), std::alignment_of<key_type>::value>::type,
+            sizeof(key_type), std::alignment_of<key_type>::value>::type,
                    SLOT_PER_BUCKET> keys_;
         std::array<typename std::aligned_storage<
-			sizeof(mapped_type), std::alignment_of<mapped_type>::value>::type,
+            sizeof(mapped_type), std::alignment_of<mapped_type>::value>::type,
                    SLOT_PER_BUCKET> vals_;
         std::bitset<SLOT_PER_BUCKET> occupied_;
 
@@ -263,7 +263,7 @@ private:
     };
 
     // cacheint is a cache-aligned atomic integer type.
-	__declspec(align(64)) struct cacheint {
+    __declspec(align(64)) struct cacheint {
         std::atomic<size_t> num;
         cacheint(): num(0) {}
         cacheint(size_t x): num(x) {}
@@ -306,7 +306,7 @@ private:
     // simultaneously in one thread. The hazard pointer variable points to a
     // pointer inside a global list of pointers, that each map checks before
     // deleting any old TableInfo pointers.
-	static __declspec(thread)  TableInfo** hazard_pointer;
+    static __declspec(thread)  TableInfo** hazard_pointer;
 
     // A GlobalHazardPointerList stores a list of pointers that cannot be
     // deleted by an expansion thread. Each thread gets its own node in the
@@ -364,7 +364,7 @@ private:
     };
 
     // counterid stores the per-thread counter index of each thread.
-	static __declspec(thread)  int counterid;
+    static __declspec(thread)  int counterid;
 
     // check_counterid checks if the counterid has already been determined. If
     // not, it assigns a counterid to the current thread by picking a random
@@ -926,6 +926,10 @@ private:
         key_type key;
     }  CuckooRecord;
 
+    #if (_MSC_VER == 1900)
+    #pragma warning(push)
+    #pragma warning(disable : 4359)
+    #endif
     // b_slot holds the information for a BFS path through the table
     __declspec(align(1)) struct b_slot {
         // The bucket of the last item in the path
@@ -943,9 +947,16 @@ private:
         b_slot(const size_t b, const size_t p, const int d)
             : bucket(b), pathcode(p), depth(d) {}
     };
+    #if (_MSC_VER == 1900)
+    #pragma warning(pop)
+    #endif
 
+    #if (_MSC_VER == 1900)
+    #pragma warning(push)
+    #pragma warning(disable : 4359)
+    #endif
     // b_queue is the queue used to store b_slots for BFS cuckoo hashing.
-	__declspec(align(1)) class b_queue {
+    __declspec(align(1)) class b_queue {
         b_slot b_slots[MAX_CUCKOO_COUNT+1];
         size_t first;
         size_t last;
@@ -972,6 +983,9 @@ private:
             return next != first;
         }
     };
+    #if (_MSC_VER == 1900)
+    #pragma warning(pop)
+    #endif
 
     // slot_search searches for a cuckoo path using breadth-first search. It
     // starts with the i1 and i2 buckets, and, until it finds a bucket with an
@@ -2080,7 +2094,7 @@ template <class Key, class T, class Hash, class Pred>
     cuckoohash_map<Key, T, Hash, Pred>::hazard_pointer = nullptr;
 
 template <class Key, class T, class Hash, class Pred>
-	__declspec(thread) int cuckoohash_map<Key, T, Hash, Pred>::counterid = -1;
+    __declspec(thread) int cuckoohash_map<Key, T, Hash, Pred>::counterid = -1;
 
 template <class Key, class T, class Hash, class Pred>
     typename cuckoohash_map<Key, T, Hash, Pred>::hasher
